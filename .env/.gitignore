@@ -1,0 +1,24 @@
+﻿# Python
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
+
+# 数据文件
+*.parquet
+*.db
+*.sqlite3
+
+# 输出目录（如果不想把报告提交到仓库）
+reports/
+charts/
+knowledge/  # 如果你不希望知识库文件被提交
+
+# IDE
+.vscode/
+.idea/
+
+# 系统文件
+.DS_Store
+Thumbs.db

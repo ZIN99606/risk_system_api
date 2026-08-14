@@ -1,0 +1,790 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>风控评级报告系统</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            padding: 30px; 
+            background: #f5f7fa;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header p { margin: 8px 0 0; opacity: 0.8; }
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .search-box input:focus {
+            border-color: #2d6a9f;
+            outline: none;
+        }
+        .search-box button {
+            padding: 14px 32px;
+            background: #2d6a9f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .search-box button:hover { background: #1a3a5c; }
+        .search-box button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #1a3a5c;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 12px;
+        }
+        
+        .level-badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        .level-Ⅰ { background: #22c55e; color: white; }
+        .level-Ⅱ { background: #eab308; color: white; }
+        .level-Ⅲ { background: #f97316; color: white; }
+        .level-Ⅳ { background: #ef4444; color: white; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            background: #f3f4f6;
+        }
+        .status-conflict { background: #fef2f2; color: #dc2626; }
+        .status-ok { background: #f0fdf4; color: #16a34a; }
+
+        .preview-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 12px;
+            transition: background 0.3s;
+        }
+        .download-btn:hover { background: #15803d; }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #2d6a9f;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        .metric {
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .metric .label { color: #6b7280; font-size: 14px; }
+        .metric .value { font-weight: 600; font-size: 16px; }
+        .error-msg {
+            color: #dc2626;
+            background: #fef2f2;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+        }
+
+        /* 图片模态框 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+        }
+        .image-modal.show {
+            display: flex;
+        }
+        .image-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 4px;
+        }
+        .image-modal-back {
+            align-self: flex-end;
+            background: #2d6a9f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .image-modal-back:hover {
+            background: #1a3a5c;
+        }
+
+        /* K线图折叠面板 */
+        #klineDetails {
+            margin-top: 20px;
+            display: none;
+        }
+        #klineDetails summary {
+            font-weight: 600;
+            cursor: pointer;
+            color: #1a3a5c;
+            padding: 10px;
+            background: #f0f4f8;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            user-select: none;
+        }
+        /* 筛选控件样式 */
+        .kline-filter {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 12px 0 16px 0;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .kline-filter label {
+            font-weight: 600;
+            color: #1a3a5c;
+        }
+        .kline-filter select, .kline-filter button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            background: white;
+        }
+        .kline-filter button {
+            background: #2d6a9f;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .kline-filter button:hover {
+            background: #1a3a5c;
+        }
+        #klineContainer {
+            margin-top: 10px;
+            min-height: 300px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <h1>📊 制造业风控评级报告系统</h1>
+        <p>输入股票代码 → AI风险评级 → RAG智能报告生成</p>
+    </div>
+
+    <div class="search-box">
+        <input id="stockInput" placeholder="请输入股票代码，如 000333" value="000333" />
+        <button id="generateBtn" onclick="generateReport()">🚀 生成完整报告</button>
+        <button onclick="clearResult()" style="background:#6b7280;">清空</button>
+    </div>
+    <div id="stockListContainer" style="margin-bottom: 20px;"></div>
+
+    <div id="resultContainer"></div>
+
+    <!-- K线图折叠面板 -->
+    <details id="klineDetails" ontoggle="onKlineToggle(event)">
+        <summary>📈 点击查看 K线图</summary>
+        <!-- 筛选控件 -->
+        <div class="kline-filter">
+            <label>📅 年份：</label>
+            <select id="klineYear">
+                <option value="">全部</option>
+                <!-- 动态由 JS 填充 -->
+            </select>
+            <label>📆 月份：</label>
+            <select id="klineMonth">
+                <option value="">全部</option>
+                <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+                <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+                <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+                <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+            </select>
+            <button onclick="applyKlineFilter()">🔍 应用筛选</button>
+            <button onclick="resetKlineFilter()" style="background:#6b7280;">🔄 重置</button>
+        </div>
+        <div id="klineContainer"></div>
+    </details>
+
+    <!-- 图片模态框 -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal(event)">
+        <div class="image-modal-content" onclick="event.stopPropagation();">
+            <div style="display:flex; justify-content:flex-end; width:100%; gap:8px;">
+                <button class="image-modal-back" onclick="closeImageModal()">✕ 返回</button>
+            </div>
+            <img id="modalImage" src="" alt="大图预览" />
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/generate_report';  // 同一服务下，使用相对路径
+
+        // 获取股票列表并展示
+        async function loadStockList() {
+            const container = document.getElementById('stockListContainer');
+            try {
+                const resp = await fetch('/stocks');
+                if (!resp.ok) throw new Error('获取列表失败');
+                const data = await resp.json();
+                const stocks = data.stocks || [];
+                let html = `
+                    <div class="card" style="background:#f0f4f8; padding:16px;">
+                        <details>
+                            <summary style="font-weight:600; cursor:pointer; color:#1a3a5c;">
+                                📋 当前支持的制造业股票池（${stocks.length}只）
+                                <span style="font-weight:normal; color:#6b7280; font-size:14px;">点击展开</span>
+                            </summary>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;">
+                                ${stocks.map(s => 
+                                    `<span style="background:white; padding:4px 12px; border-radius:16px; border:1px solid #d1d5db; font-size:13px;">
+                                        ${s.code} ${s.name}
+                                    </span>`
+                                ).join('')}
+                            </div>
+                            <p style="margin-top:12px; color:#6b7280; font-size:13px;">
+                                💡 ${data.sector || '制造业'} — 输入以上任意代码即可生成报告
+                            </p>
+                        </details>
+                    </div>
+                `;
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<p style="color:#9ca3af;">⚠️ 无法加载股票列表，请检查后端服务</p>`;
+            }
+        }
+
+        window.onload = function() {
+            loadStockList();
+        };
+
+        // ---- K线图相关全局变量 ----
+        let klineLoaded = false;
+        let klineChart = null;
+        let rawKlineData = null;          // 存储原始数据 { dates, values, volumes }
+        let currentStock = '';
+
+        // 当用户点击展开K线图时触发
+        function onKlineToggle(event) {
+            if (event.target.open && !klineLoaded) {
+                const stock = document.getElementById('stockInput').value.trim().toUpperCase();
+                if (stock) {
+                    currentStock = stock;
+                    loadKlineData(stock);
+                    klineLoaded = true;
+                }
+            }
+        }
+
+        // 加载K线数据（只请求一次，缓存）
+        function loadKlineData(stock) {
+            const container = document.getElementById('klineContainer');
+            container.innerHTML = '<p style="text-align:center; color:#6b7280;">加载K线数据...</p>';
+
+            fetch(`/kline/${stock}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('数据加载失败');
+                    return res.json();
+                })
+                .then(data => {
+                    const rows = data.data;
+                    if (!rows || rows.length === 0) {
+                        container.innerHTML = '<p style="text-align:center; color:#9ca3af;">暂无K线数据</p>';
+                        return;
+                    }
+                    // 缓存原始数据
+                    rawKlineData = {
+                        dates: rows.map(r => r.trade_date),
+                        values: rows.map(r => [r.open, r.close, r.low, r.high]),
+                        volumes: rows.map(r => r.volume)
+                    };
+                    // 填充年份下拉框
+                    populateYearFilter(rawKlineData.dates);
+                    // 默认显示全部
+                    renderKline(null, null);
+                })
+                .catch(err => {
+                    container.innerHTML = `<p style="color:#dc2626;">❌ 加载K线失败：${err.message}</p>`;
+                });
+        }
+
+        // 填充年份下拉
+        function populateYearFilter(dates) {
+            const yearSet = new Set();
+            dates.forEach(d => {
+                const year = d.substring(0, 4);
+                yearSet.add(year);
+            });
+            const yearSelect = document.getElementById('klineYear');
+            const currentVal = yearSelect.value;
+            yearSelect.innerHTML = '<option value="">全部</option>';
+            const sortedYears = Array.from(yearSet).sort();
+            sortedYears.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                yearSelect.appendChild(opt);
+            });
+            // 恢复之前选中的值（如果有）
+            if ([...yearSelect.options].some(o => o.value === currentVal)) {
+                yearSelect.value = currentVal;
+            }
+        }
+
+        // 渲染K线图（根据年份、月份过滤）
+        function renderKline(year, month) {
+            if (!rawKlineData) return;
+            const container = document.getElementById('klineContainer');
+            container.innerHTML = ''; // 清空
+
+            let filteredIdx = rawKlineData.dates.map((d, idx) => idx);
+            if (year) {
+                filteredIdx = filteredIdx.filter(i => rawKlineData.dates[i].startsWith(year));
+            }
+            if (month) {
+                const monthStr = String(month).padStart(2, '0');
+                filteredIdx = filteredIdx.filter(i => rawKlineData.dates[i].substring(5, 7) === monthStr);
+            }
+
+            if (filteredIdx.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#9ca3af;">该时间段内无数据</p>';
+                return;
+            }
+
+            const dates = filteredIdx.map(i => rawKlineData.dates[i]);
+            const values = filteredIdx.map(i => rawKlineData.values[i]);
+            const volumes = filteredIdx.map(i => rawKlineData.volumes[i]);
+
+            // 创建图表容器
+            const chartDom = document.createElement('div');
+            chartDom.style.width = '100%';
+            chartDom.style.height = '420px';
+            container.appendChild(chartDom);
+
+            if (klineChart) {
+                klineChart.dispose();
+                klineChart = null;
+            }
+            klineChart = echarts.init(chartDom);
+
+            const option = {
+                title: {
+                    text: `${currentStock} 日K线走势图${year ? ' (' + year + (month ? '-' + month : '') + ')' : ''}`,
+                    left: 'center',
+                    textStyle: { fontSize: 16, color: '#1a3a5c' }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' }
+                },
+                grid: [
+                    { left: '8%', right: '8%', top: '18%', height: '55%' },
+                    { left: '8%', right: '8%', bottom: '10%', height: '20%' }
+                ],
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: dates,
+                        gridIndex: 0,
+                        axisLabel: { 
+                            rotate: 30,
+                            interval: Math.floor(dates.length / 30)
+                        }
+                    },
+                    {
+                        type: 'category',
+                        data: dates,
+                        gridIndex: 1,
+                        axisLabel: { 
+                            rotate: 30,
+                            interval: Math.floor(dates.length / 30)
+                        }
+                    }
+                ],
+                yAxis: [
+                    { scale: true, gridIndex: 0, splitLine: { show: true } },
+                    { scale: true, gridIndex: 1, splitLine: { show: true } }
+                ],
+                series: [
+                    {
+                        name: 'K线',
+                        type: 'candlestick',
+                        data: values,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0,
+                        itemStyle: {
+                            color: '#ef232a',
+                            color0: '#14b143',
+                            borderColor: '#ef232a',
+                            borderColor0: '#14b143'
+                        }
+                    },
+                    {
+                        name: '成交量',
+                        type: 'bar',
+                        data: volumes,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        itemStyle: {
+                            color: function(params) {
+                                const idx = params.dataIndex;
+                                const close = values[idx][1];
+                                const open = values[idx][0];
+                                return close >= open ? '#ef232a' : '#14b143';
+                            }
+                        }
+                    }
+                ]
+            };
+
+            klineChart.setOption(option);
+
+            // 自适应
+            const resizeHandler = function() {
+                if (klineChart) {
+                    klineChart.resize();
+                }
+            };
+            window.removeEventListener('resize', resizeHandler);
+            window.addEventListener('resize', resizeHandler);
+        }
+
+        // 应用筛选
+        function applyKlineFilter() {
+            const year = document.getElementById('klineYear').value;
+            const month = document.getElementById('klineMonth').value;
+            renderKline(year || null, month || null);
+        }
+
+        // 重置筛选
+        function resetKlineFilter() {
+            document.getElementById('klineYear').value = '';
+            document.getElementById('klineMonth').value = '';
+            renderKline(null, null);
+        }
+
+        // ---- 图片模态框 ----
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const img = document.getElementById('modalImage');
+            img.src = src;
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal(event) {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+
+        // ---- 生成报告（保持不变） ----
+        async function generateReport() {
+            const stock = document.getElementById('stockInput').value.trim().toUpperCase();
+            if (!stock) {
+                alert('请输入股票代码！');
+                return;
+            }
+
+            const btn = document.getElementById('generateBtn');
+            const container = document.getElementById('resultContainer');
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ 生成中...';
+            container.innerHTML = `
+                <div class="card" style="text-align:center; padding:40px;">
+                    <div class="loading"></div>
+                    <p style="margin-top:16px; color:#6b7280;">正在生成报告，预计需要 5-15 秒...</p>
+                    <p style="color:#9ca3af; font-size:13px;">（风险评估 + RAG检索 + 报告生成）</p>
+                </div>
+            `;
+
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock: stock })
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.detail || `HTTP ${resp.status}`);
+                }
+
+                const result = await resp.json();
+                renderResult(result, stock);
+
+                // 显示K线图折叠面板
+                const klineDetails = document.getElementById('klineDetails');
+                if (klineDetails) {
+                    klineDetails.style.display = 'block';
+                    klineDetails.open = false;
+                    klineLoaded = false;
+                    rawKlineData = null; // 清空缓存，以便重新加载
+                }
+
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="card error-msg">
+                        ❌ 报告生成失败：${err.message}
+                        <br><br>
+                        <strong>请检查：</strong>
+                        <br>1. 后端服务是否正常运行
+                        <br>2. 股票代码是否正确（${stock} 是否在30只股票池中）
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🚀 生成完整报告';
+            }
+        }
+
+        // ---- 渲染报告（保持原有） ----
+        function renderResult(result, stock) {
+            const container = document.getElementById('resultContainer');
+            const d = result.risk_data || {};
+            const level = d.final_level || '未知';
+            const levelClass = 'level-' + level.replace('级', '');
+
+            const docxPath = result.docx_path || '';
+
+            let chartsHtml = '';
+            if (result.chart_files && result.chart_files.length > 0) {
+                const chartGroups = {};
+                result.chart_files.forEach(fileName => {
+                    const prefix = fileName.split('_')[0] || '其他';
+                    if (!chartGroups[prefix]) chartGroups[prefix] = [];
+                    chartGroups[prefix].push(fileName);
+                });
+
+                const groupLabels = {
+                    'trend': '📈 趋势图',
+                    'bar': '📊 柱状图',
+                    'risk_matrix': '🎯 风险矩阵'
+                };
+
+                chartsHtml = '<div style="margin-top:12px;">';
+                for (const [group, files] of Object.entries(chartGroups)) {
+                    const label = groupLabels[group] || group;
+                    chartsHtml += `
+                        <div style="margin-bottom:16px;">
+                            <div style="font-weight:600; font-size:14px; color:#1a3a5c; margin-bottom:8px;">${label}</div>
+                            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px;">
+                    `;
+                    files.forEach(fileName => {
+                        const imgSrc = `/charts/${fileName}`;
+                        chartsHtml += `
+                            <div style="background:#f8fafc; border-radius:6px; padding:6px; border:1px solid #e5e7eb; cursor:pointer;" 
+                                 onclick="openImageModal('${imgSrc}')">
+                                <img src="${imgSrc}" 
+                                     style="width:100%; height:100px; object-fit:cover; border-radius:4px;" 
+                                     alt="图表" />
+                            </div>
+                        `;
+                    });
+                    chartsHtml += `
+                            </div>
+                        </div>
+                    `;
+                }
+                chartsHtml += '</div>';
+            } else {
+                chartsHtml = '<p style="color:#9ca3af;">暂无图表生成</p>';
+            }
+
+            container.innerHTML = `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                        <h2 style="margin:0;">
+                            📄 ${stock} 风险报告
+                            <span class="level-badge ${levelClass}">${level}</span>
+                        </h2>
+                        <span class="status-badge ${d.has_conflict ? 'status-conflict' : 'status-ok'}">
+                            ${d.has_conflict ? '⚠️ 存在冲突' : '✅ 无冲突'}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>📊 风险指标</h3>
+                        <div class="metric"><span class="label">综合得分</span><span class="value">${d.composite_score || 'N/A'}</span></div>
+                        <div class="metric"><span class="label">AI评分</span><span class="value">${d.ai_score || 'N/A'} (${d.ai_level || 'N/A'})</span></div>
+                        <div class="metric"><span class="label">财务等级</span><span class="value">${d.fin_level || 'N/A'}</span></div>
+                        <div class="metric"><span class="label">决策来源</span><span class="value">${d.dominant_source || 'N/A'}</span></div>
+                        <div class="metric"><span class="label">历史波动率</span><span class="value">${d.hist_vol_pct || 'N/A'}%</span></div>
+                        <div class="metric"><span class="label">资产负债率</span><span class="value">${d.debt_ratio_pct || 'N/A'}%</span></div>
+                        ${d.mc_q1_1d_pct ? `<div class="metric"><span class="label">蒙特卡洛 1% 分位</span><span class="value">${d.mc_q1_1d_pct}%</span></div>` : ''}
+                        ${d.pred_vol_pct ? `<div class="metric"><span class="label">预测波动率</span><span class="value">${d.pred_vol_pct}%</span></div>` : ''}
+                    </div>
+
+                    <div class="card">
+                        <h3>⚖️ 处置建议</h3>
+                        <p style="font-size:16px; line-height:1.8; background:#f8fafc; padding:16px; border-radius:8px; border-left:4px solid ${level === 'Ⅳ级' ? '#ef4444' : level === 'Ⅲ级' ? '#f97316' : '#22c55e'};">
+                            ${d.action || '无处置建议'}
+                        </p>
+                        ${d.veto_reason ? `<p style="color:#dc2626; font-size:14px;"><strong>否决原因：</strong>${d.veto_reason}</p>` : ''}
+                    </div>
+                </div>
+
+                ${result.preview_text ? `
+                    <div class="card">
+                        <h3>📝 报告预览（纯文本摘要）</h3>
+                        <div class="preview-box">${escapeHtml(result.preview_text)}</div>
+                    </div>
+                ` : ''}
+
+                <div class="card">
+                    <h3>📎 下载报告</h3>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        ${docxPath ? `<a href="/download/${docxPath}" class="download-btn">📥 下载 Word 报告 (.docx)</a>` : ''}
+                        ${result.txt_path ? `<a href="/download/${result.txt_path}" class="download-btn" style="background:#6b7280;">📄 预览文本 (.txt)</a>` : ''}
+                    </div>
+                    <p style="color:#9ca3af; font-size:13px; margin-top:12px;">
+                        💡 报告保存在 <code>./reports/</code> 目录，图表保存在 <code>./charts/</code> 目录
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h3>📊 生成的图表</h3>
+                    ${chartsHtml}
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ---- 清空 ----
+        function clearResult() {
+            document.getElementById('resultContainer').innerHTML = '';
+            document.getElementById('klineContainer').innerHTML = '';
+            document.getElementById('stockInput').value = '';
+            document.getElementById('stockInput').focus();
+            if (klineChart) {
+                klineChart.dispose();
+                klineChart = null;
+            }
+            klineLoaded = false;
+            rawKlineData = null;
+            const details = document.getElementById('klineDetails');
+            if (details) {
+                details.style.display = 'none';
+                details.open = false;
+            }
+        }
+
+        // 回车触发搜索
+        document.getElementById('stockInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') generateReport();
+        });
+    </script>
+</body>
+</html>

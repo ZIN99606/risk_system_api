@@ -20,7 +20,7 @@ sys.path.append(str(os.path.dirname(os.path.dirname(os.path.dirname(os.path.absp
 from app.core.config import (
     BASE_DIR, REPORTS_DIR, CHARTS_DIR, KNOWLEDGE_DIR, DB_CONFIG
 )
-from app.core.risk_system import (
+from app.core.riskSystem import (
     load_all_data_sources, 
     get_single_stock_report,
     get_mysql_engine

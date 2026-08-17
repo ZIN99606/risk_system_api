@@ -61,6 +61,9 @@ async def root():
             "static": "/static/index.html"
         }
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 # ---------- 启动入口（仅本地调试用） ----------
 if __name__ == "__main__":

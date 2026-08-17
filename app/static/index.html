@@ -742,7 +742,7 @@
                 <div class="card">
                     <h3>📎 下载报告</h3>
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                        ${docxPath ? `<a href="/download/${docxPath}" class="download-btn">📥 下载 Word 报告 (.docx)</a>` : ''}
+                        ${docxPath ? `<a href="${BASE_URL}/download/${docxPath}" class="download-btn">📥 下载 Word 报告 (.docx)</a>` : ''}
                         ${result.txt_path ? `<a href="/download/${result.txt_path}" class="download-btn" style="background:#6b7280;">📄 预览文本 (.txt)</a>` : ''}
                     </div>
                     <p style="color:#9ca3af; font-size:13px; margin-top:12px;">

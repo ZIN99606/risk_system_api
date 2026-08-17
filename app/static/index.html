@@ -316,13 +316,14 @@
     </div>
 
     <script>
-        const API_URL = 'https://meticulous-creativity-production-fb7b.up.railway.app/';  // 同一服务下，使用相对路径
+        const base_URL = 'https://meticulous-creativity-production-fb7b.up.railway.app';  // 同一服务下，使用相对路径
+        const API_URL = BASE_URL + '/generate_report'
 
         // 获取股票列表并展示
         async function loadStockList() {
             const container = document.getElementById('stockListContainer');
             try {
-                const resp = await fetch('/stocks');
+                const resp = await fetch(BASE_URL + '/stocks');
                 if (!resp.ok) throw new Error('获取列表失败');
                 const data = await resp.json();
                 const stocks = data.stocks || [];
@@ -379,7 +380,7 @@
             const container = document.getElementById('klineContainer');
             container.innerHTML = '<p style="text-align:center; color:#6b7280;">加载K线数据...</p>';
 
-            fetch(`/kline/${stock}`)
+            fetch(BASE_URL + '/kline/' + stock)
                 .then(res => {
                     if (!res.ok) throw new Error('数据加载失败');
                     return res.json();

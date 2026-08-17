@@ -38,11 +38,11 @@ os.makedirs(KNOWLEDGE_DIR, exist_ok=True)
 
 # ==================== 数据库配置（用于K线数据） ====================
 DB_CONFIG = {
-    'host': 'localhost',
-    'port': 3307,
-    'user': 'root',
-    'password': '060401',
-    'database': 'risk_db'
+    'host': os.getenv('MYSQL_HOST', 'localhost'),
+    'port': int(os.getenv('MYSQL_PORT', 3307)),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', '060401'),
+    'database': os.getenv('MYSQL_DATABASE', 'risk_db')
 }
 
 # ==================== 股票名称映射 ====================

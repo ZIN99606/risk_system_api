@@ -324,8 +324,10 @@
             const container = document.getElementById('stockListContainer');
             try {
                 const resp = await fetch(BASE_URL + '/stocks');
+                console.log('响应状态:', resp.status);
                 if (!resp.ok) throw new Error('获取列表失败');
                 const data = await resp.json();
+                console.log('收到的数据:', data);
                 const stocks = data.stocks || [];
                 let html = `
                     <div class="card" style="background:#f0f4f8; padding:16px;">
@@ -349,6 +351,7 @@
                 `;
                 container.innerHTML = html;
             } catch (e) {
+                 console.error('加载失败:', e);
                 container.innerHTML = `<p style="color:#9ca3af;">⚠️ 无法加载股票列表，请检查后端服务</p>`;
             }
         }

@@ -88,11 +88,17 @@ async def health_check():
 @router.get("/stocks")
 async def get_stocks():
     """返回所有支持的制造业股票列表"""
-    return {
+    data = {
         "stocks": STOCKS_INFO,
         "total": len(STOCKS_INFO),
         "sector": "制造业（电子、电力设备、汽车、机械设备、家用电器、国防军工）"
     }
+    # 手动创建响应并添加 CORS 头
+    response = JSONResponse(content=data)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+    return response
 
 
 # ===================== K线数据 =====================

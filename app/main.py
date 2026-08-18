@@ -26,10 +26,10 @@ app = FastAPI(
     version="v4.0"
 )
 
-# ---------- 跨域配置 ----------
+# ---------- 跨域配置（只保留一处，放在最前面） ----------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # 开发阶段允许所有来源，方便调试
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

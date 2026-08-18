@@ -93,11 +93,9 @@ async def get_stocks():
         "total": len(STOCKS_INFO),
         "sector": "制造业（电子、电力设备、汽车、机械设备、家用电器、国防军工）"
     }
-    # 手动创建响应并添加 CORS 头
-    response = JSONResponse(content=data)
+     # 显式创建 JSONResponse 并设置媒体类型
+    response = JSONResponse(content=data, media_type="application/json")
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
     return response
 
 
